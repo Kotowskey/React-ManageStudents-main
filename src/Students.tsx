@@ -1,60 +1,40 @@
-
-
-import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import Student from './Student';
 import { StudentClass } from './types/Student';
-import AddStudent from './AddStudent';
-import EditStudent from './EditStudent';
 
-export default function Students() {
-  const [studentList, updateList] = useState<StudentClass[]>([
-    new StudentClass('Ala', 'Makota', 123485, new Date('2000-01-21')),
-    new StudentClass('Jan', 'Kowlaski', 2345, new Date('1999-10-23')),
-    new StudentClass('Adrian', 'Duda', 156789, new Date('2001-04-01'))
-  ]);
-  const [showAddForm, changeAddForm] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<StudentClass | null>(null);
+type StudentPropsType = {
+  studentList: StudentClass[];
+  changeSelectedStudent: (student: StudentClass) => void;
+};
 
-  const addNewStudent = (student: StudentClass): void => {
-    changeAddForm(false);
-    updateList([...studentList, student]);
-  };
-
-  const updateStudent = (updatedStudent: StudentClass): void => {
-    const updatedList = studentList.map((student) =>
-      student.Index_nr === updatedStudent.Index_nr ? updatedStudent : student
-    );
-    updateList(updatedList);
-    setEditingStudent(null);
-  };
-
-  const cancelEdit = (): void => {
-    setEditingStudent(null);
-  };
+export default function Students({ studentList, changeSelectedStudent }: StudentPropsType) {
+  const listTitle = 'Lista studentów';
 
   return (
     <>
-      <h1>Students List</h1>
-      {studentList.length > 0 && (
+      {listTitle}
+      {studentList.length > 0 ? (
         <ul>
           {studentList.map((student) => (
             <li key={student.Index_nr}>
-              <Student student={student} />
-              <button onClick={() => setEditingStudent(student)}>Edit</button>
+              <div onClick={() => changeSelectedStudent(student)}>
+                <Student student={student} />
+                <button>
+                  <NavLink to="/edit">Edytuj studenta</NavLink>
+                </button>
+              </div>
             </li>
           ))}
         </ul>
+      ) : (
+        <p>Brak studentów</p>
       )}
-      {studentList.length === 0 && <p>No students stored</p>}
-      {!showAddForm && !editingStudent && <button onClick={() => changeAddForm(true)}>Add Student</button>}
-      {showAddForm && <AddStudent addFn={addNewStudent} />}
-      {editingStudent && (
-        <EditStudent
-          student={editingStudent}
-          updateFn={updateStudent}
-          cancelFn={cancelEdit}
-        />
-      )}
+      <button>
+        <NavLink to="/add">Dodaj studenta</NavLink>
+      </button>
+      <button>
+        <NavLink to="/delete">Usuń studenta</NavLink>
+      </button>
     </>
   );
 }

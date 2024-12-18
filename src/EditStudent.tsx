@@ -1,51 +1,81 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StudentClass } from './types/Student';
+import { useNavigate } from 'react-router-dom';
 
-type EditStudentProps = {
-  student: StudentClass;
-  updateFn: (updatedStudent: StudentClass) => void;
-  cancelFn: () => void;
-};
+type StudentPropsType = {
+  editFn: (new_student: StudentClass) => void;
+  studentToEdit?: StudentClass;
+}
 
-export default function EditStudent({ student, updateFn, cancelFn }: EditStudentProps): React.ReactElement {
-  const [editStudent, setEditStudent] = useState(new StudentClass(student.Name, student.Surname, student.Index_nr, student.dataUrodzenia));
+export default function EditStudent({ editFn, studentToEdit }: StudentPropsType): React.ReactElement {
+  const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const { name, value } = e.target;
+  const [newName, setNewName] = useState<string>('');
+  const [newSurname, setNewSurname] = useState<string>('');
+  const [newIndex, setNewIndex] = useState<number | undefined>();
+  const [newBirthDate, setNewBirthDate] = useState<Date | undefined>();
 
-    const updatedStudent = new StudentClass(
-      name === 'name' ? value : editStudent.Name,
-      name === 'surname' ? value : editStudent.Surname,
-      name === 'index_nr' ? Number(value) : editStudent.Index_nr,
-      name === 'dataUrodzenia' ? new Date(value) : editStudent.dataUrodzenia
-    );
+  useEffect(() => {
+    if (studentToEdit) {
+      setNewName(studentToEdit.Name);
+      setNewSurname(studentToEdit.Surname);
+      setNewIndex(studentToEdit.Index_nr);
+      setNewBirthDate(studentToEdit.dataUrodzenia);
+    }
+  }, [studentToEdit]);
 
-    setEditStudent(updatedStudent);
-  };
-
-  const handleSave = (): void => {
-    updateFn(editStudent);
+  const saveChanges = (): void => {
+    if (newName && newSurname && newIndex && newBirthDate) {
+      const updatedStudent = new StudentClass(newName, newSurname, newIndex, newBirthDate);
+      editFn(updatedStudent);
+      navigate('/');
+    }
   };
 
   return (
-    <>
+    <div>
+      <h2>Edytuj studenta</h2>
       <div>
-        <h3>Edit Student</h3>
-        <div>
-          Name: <input type="text" name="name" value={editStudent.Name} onChange={handleInputChange} />
-        </div>
-        <div>
-          Surname: <input type="text" name="surname" value={editStudent.Surname} onChange={handleInputChange} />
-        </div>
-        <div>
-          Index: <input type="number" name="index_nr" value={editStudent.Index_nr} onChange={handleInputChange} />
-        </div>
-        <div>
-          Date of Birth: <input type="date" name="dataUrodzenia" value={editStudent.dataUrodzenia.toISOString().slice(0, 10)} onChange={handleInputChange} />
-        </div>
-        <button onClick={handleSave}>Save</button>
-        <button onClick={cancelFn}>Cancel</button>
+        <label>
+          Imię:
+          <input
+            type='text'
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+        </label>
       </div>
-    </>
+      <div>
+        <label>
+          Nazwisko:
+          <input
+            type='text'
+            value={newSurname}
+            onChange={(e) => setNewSurname(e.target.value)}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Index:
+          <input
+            type='number'
+            value={newIndex?.toString() || ''}
+            onChange={(e) => setNewIndex(parseInt(e.target.value))}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Data urodzin:
+          <input
+            type='date'
+            value={newBirthDate ? newBirthDate.toISOString().split('T')[0] : ''}
+            onChange={(e) => setNewBirthDate(new Date(e.target.value))}
+          />
+        </label>
+      </div>
+      <button onClick={saveChanges}>Zapisz</button>
+    </div>
   );
 }
